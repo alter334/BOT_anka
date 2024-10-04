@@ -11,9 +11,29 @@ import (
 // 安価登録
 func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 	log.Println("Received MESSAGE_CREATED event: " + p.Message.Text)
-	h.messageCount++
-	h.ankaChecker(p.Message.ChannelID, h.messageCount, p.Message.ID)
+
+	if _, exist := h.messageCount[p.Message.ChannelID]; !exist {
+		h.messageCount[p.Message.ChannelID] = 0
+		log.Println(h.messageCount[p.Message.ChannelID])
+	} else {
+		h.messageCount[p.Message.ChannelID]++
+		log.Println(h.messageCount[p.Message.ChannelID])
+	}
+
+	h.ankaChecker(p.Message.ChannelID, h.messageCount[p.Message.ChannelID], p.Message.ID)
 	sep := strings.Fields(p.Message.Text)
+
+	if len(sep) == 2 {
+		if sep[1] == "join" {
+			log.Println("Received join command")
+			h.BotJoiner(p.Message.ChannelID)
+		}
+		if sep[1] == "leave" {
+			log.Println("Received leave command")
+			h.BotLeaver(p.Message.ChannelID)
+		}
+	}
+
 	anka := sep[len(sep)-1]
 
 	if rune(anka[0]) != '↓' {
@@ -25,8 +45,8 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 		log.Println("Failed to parse")
 		return
 	}
-	h.ankas[h.messageCount+num] = p.Message.ID
-	log.Println("Add Ancor:" + strconv.Itoa(h.messageCount+num))
+	h.ankas[h.messageCount[p.Message.ChannelID]+num] = p.Message.ID
+	log.Println("Add Ancor:" + strconv.Itoa(h.messageCount[p.Message.ChannelID]+num))
 
 }
 

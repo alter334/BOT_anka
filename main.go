@@ -16,7 +16,6 @@ func main() {
 		panic(err)
 	}
 	h := handler.NewHandler(bot)
-
-	go h.BotHandler()
+	h.BotHandler()
 
 }
