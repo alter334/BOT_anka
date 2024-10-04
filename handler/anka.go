@@ -12,13 +12,14 @@ import (
 // 安価登録
 func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 	log.Println("Received MESSAGE_CREATED event: " + p.Message.Text)
+	channel, _, _ := h.bot.API().ChannelApi.GetChannel(context.Background(), p.Message.ChannelID).Execute()
 
 	if _, exist := h.messageCount[p.Message.ChannelID]; !exist {
 		h.messageCount[p.Message.ChannelID] = 0
-		log.Println(h.messageCount[p.Message.ChannelID])
+		log.Println(h.messageCount[p.Message.ChannelID], ":"+channel.Name)
 	} else {
 		h.messageCount[p.Message.ChannelID]++
-		log.Println(h.messageCount[p.Message.ChannelID])
+		log.Println(h.messageCount[p.Message.ChannelID], ":"+channel.Name)
 	}
 
 	h.ankaChecker(p.Message.ChannelID, h.messageCount[p.Message.ChannelID], p.Message.ID)
@@ -48,7 +49,7 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 		return
 	}
 	h.ankas[h.messageCount[p.Message.ChannelID]+num] = p.Message.ID
-	channel, _, _ := h.bot.API().ChannelApi.GetChannel(context.Background(), p.Message.ChannelID).Execute()
+
 	log.Println("Add Ancor:" + strconv.Itoa(h.messageCount[p.Message.ChannelID]+num) + ",at:" + channel.Name)
 
 }
