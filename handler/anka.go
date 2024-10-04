@@ -34,9 +34,10 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 		}
 	}
 
-	anka := sep[len(sep)-1]
+	anka := []rune(sep[len(sep)-1])
 
-	if rune(anka[0]) != '↓' {
+	if anka[0] != '↓' {
+		log.Println(anka[0])
 		return
 	}
 	amount := string([]rune(anka)[1:])
