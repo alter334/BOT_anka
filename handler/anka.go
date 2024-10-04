@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"log"
 	"strconv"
 	"strings"
@@ -47,7 +48,8 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 		return
 	}
 	h.ankas[h.messageCount[p.Message.ChannelID]+num] = p.Message.ID
-	log.Println("Add Ancor:" + strconv.Itoa(h.messageCount[p.Message.ChannelID]+num))
+	channel, _, _ := h.bot.API().ChannelApi.GetChannel(context.Background(), p.Message.ChannelID).Execute()
+	log.Println("Add Ancor:" + strconv.Itoa(h.messageCount[p.Message.ChannelID]+num) + ",at:" + channel.Name)
 
 }
 
