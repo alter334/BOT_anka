@@ -65,6 +65,7 @@ func (h *Handler) ankaChecker(channelid string, messageNum int, messageId string
 	originUrl := "https://q.trap.jp/messages/" + originID
 	ancorUrl := "https://q.trap.jp/messages/" + messageId
 	h.BotSimplePost(channelid, originUrl+"\n"+ancorUrl)
+	h.BotSimplePost("baaf247d-125a-47e4-82a8-ffcccab5f0b8", originUrl+"\n"+ancorUrl)
 	log.Println("Anka/in:", channelid, " at:", messageNum)
 	delete(h.ankas[channelid], messageNum)
 }
