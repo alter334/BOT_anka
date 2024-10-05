@@ -26,7 +26,7 @@ func (h *Handler) BotSimplePost(channelID string, content string) (messageid str
 }
 
 func (h *Handler) BotJoiner(channelID string) {
-	_, err := h.bot.API().BotApi.LetBotJoinChannel(context.Background(), "019258ac-db2d-7dad-81f5-e206d162f4c5").
+	_, err := h.bot.API().BotApi.LetBotJoinChannel(context.Background(), os.Getenv("TRAQ_BOT_ID")).
 		PostBotActionJoinRequest(*traq.NewPostBotActionJoinRequest(channelID)).Execute()
 	if err != nil {
 		log.Println(err)
@@ -36,7 +36,7 @@ func (h *Handler) BotJoiner(channelID string) {
 }
 
 func (h *Handler) BotLeaver(channelID string) {
-	_, err := h.bot.API().BotApi.LetBotLeaveChannel(context.Background(), "019258ac-db2d-7dad-81f5-e206d162f4c5").
+	_, err := h.bot.API().BotApi.LetBotLeaveChannel(context.Background(), os.Getenv("TRAQ_BOT_ID")).
 		PostBotActionLeaveRequest(*traq.NewPostBotActionLeaveRequest(channelID)).Execute()
 	if err != nil {
 		log.Println(err)
