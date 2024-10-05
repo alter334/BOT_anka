@@ -56,6 +56,9 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 
 func (h *Handler) ankaChecker(channelid string, messageNum int, messageId string) {
 	originID, exist := h.ankas[messageNum]
+	if channelid != originID {
+		return
+	}
 	if !exist {
 		return
 	}
