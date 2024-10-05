@@ -48,22 +48,23 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 		log.Println("Failed to parse")
 		return
 	}
-	h.ankas[h.messageCount[p.Message.ChannelID]+num] = p.Message.ID
+	if _, exist := h.ankas[p.Message.ChannelID]; !exist {
+		h.ankas[p.Message.ChannelID] = make(map[int]string)
+	}
+	h.ankas[p.Message.ChannelID][h.messageCount[p.Message.ChannelID]+num] = p.Message.ID
 
-	log.Println("Add Ancor:" + strconv.Itoa(h.messageCount[p.Message.ChannelID]+num) + ",at:" + channel.Name)
+	log.Println("Add Ancor:" + strconv.Itoa(h.messageCount[p.Message.ChannelID]+num) + ",in:" + channel.Name)
 
 }
 
 func (h *Handler) ankaChecker(channelid string, messageNum int, messageId string) {
-	originID, exist := h.ankas[messageNum]
-	if channelid != originID {
-		return
-	}
+	originID, exist := h.ankas[channelid][messageNum]
 	if !exist {
 		return
 	}
 	originUrl := "https://q.trap.jp/messages/" + originID
 	ancorUrl := "https://q.trap.jp/messages/" + messageId
 	h.BotSimplePost(channelid, originUrl+"\n"+ancorUrl)
-	delete(h.ankas, messageNum)
+	log.Println("Anka/in:", channelid, " at:", messageNum)
+	delete(h.ankas[channelid], messageNum)
 }

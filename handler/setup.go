@@ -9,7 +9,7 @@ import (
 )
 
 func NewHandler(bot *traqwsbot.Bot) *Handler {
-	return &Handler{bot: bot, messageCount: make(map[string]int), ankas: make(map[int]string)}
+	return &Handler{bot: bot, messageCount: make(map[string]int), ankas: make(map[string](map[int]string))}
 }
 
 func (h *Handler) BotHandler() {
