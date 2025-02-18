@@ -6,7 +6,7 @@ GRANT ALL PRIVILEGES ON anka.* TO 'anka'@'%';
 FLUSH PRIVILEGES;
 -- 以下traQer関連
 CREATE TABLE IF NOT EXISTS `ankaDB` (
-  `ankaiId` char(36) NOT NULL,
+  `ankaId` char(36) NOT NULL,
   `ankaInvokeMessageNum` int(11) NOT NULL,
-  PRIMARY KEY (`userid`)
+  PRIMARY KEY (`ankaId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
