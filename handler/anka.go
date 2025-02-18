@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/traPtitech/traq-ws-bot/payload"
 )
 
@@ -22,10 +23,13 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 		log.Println(h.messageCount[p.Message.ChannelID], ":"+channel.Name)
 	}
 
-	h.ankaChecker(p.Message.ChannelID, h.messageCount[p.Message.ChannelID], p.Message.ID)
+	h.ankaChecker(p.Message.ChannelID, p.Message.ID)
 	sep := strings.Fields(p.Message.Text)
 
 	if len(sep) == 2 {
+		if sep[0] != "@BOT_anka" {
+			return
+		}
 		if sep[1] == "join" {
 			log.Println("Received join command")
 			h.BotJoiner(p.Message.ChannelID)
@@ -48,24 +52,47 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 		log.Println("Failed to parse")
 		return
 	}
-	if _, exist := h.ankas[p.Message.ChannelID]; !exist {
-		h.ankas[p.Message.ChannelID] = make(map[int]string)
-	}
-	h.ankas[p.Message.ChannelID][h.messageCount[p.Message.ChannelID]+num] = p.Message.ID
 
-	log.Println("Add Ancor:" + strconv.Itoa(h.messageCount[p.Message.ChannelID]+num) + ",in:" + channel.Name)
+	if num < 1 {
+		log.Println("Invalid number")
+		return
+	}
+
+	ankaID := uuid.New().String()
+	newanka := &Anka{
+		id:           ankaID,
+		messageID:    p.Message.ID,
+		channelID:    p.Message.ChannelID,
+		messageCount: num,
+		delete: func(am *AnkaManager) {
+			am.RemoveAnkaByID(ankaID)
+		},
+	}
+	h.ankaManager.AddAnka(*newanka)
+
+	log.Println("Add Ancor:" + "after" + strconv.Itoa(num) + ",in:" + channel.Name)
 
 }
 
-func (h *Handler) ankaChecker(channelid string, messageNum int, messageId string) {
-	originID, exist := h.ankas[channelid][messageNum]
-	if !exist {
+func (h *Handler) ankaChecker(channelid string, messageId string) {
+	ankas := h.ankaManager.DecrementAnkaMessageCount(channelid)
+	var ankaids []string
+	if !(len(ankas) > 0) {
 		return
 	}
-	originUrl := "https://q.trap.jp/messages/" + originID
+	posttext := ""
+	for _, anka := range ankas {
+		originUrl := "https://q.trap.jp/messages/" + anka.messageID
+		posttext += originUrl + "\n"
+		log.Println("Anka/in:", channelid)
+		ankaids = append(ankaids, anka.id)
+	}
 	ancorUrl := "https://q.trap.jp/messages/" + messageId
-	h.BotSimplePost(channelid, originUrl+"\n"+ancorUrl)
-	h.BotSimplePost("baaf247d-125a-47e4-82a8-ffcccab5f0b8", originUrl+"\n"+ancorUrl)
-	log.Println("Anka/in:", channelid, " at:", messageNum)
-	delete(h.ankas[channelid], messageNum)
+	h.BotSimplePost(channelid, posttext+ancorUrl)
+	// h.BotSimplePost("baaf247d-125a-47e4-82a8-ffcccab5f0b8", originUrl+"\n"+ancorUrl)
+	for _, ankaid := range ankaids{
+		h.ankaManager.RemoveAnkaByID(ankaid)
+    log.Println("Remove Anka:" + ankaid + ",in:" + channelid)
+		
+	}
 }
