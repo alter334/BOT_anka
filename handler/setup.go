@@ -14,7 +14,8 @@ func NewHandler(bot *traqwsbot.Bot) *Handler {
 	newDB.Setup()
 	manager := &AnkaManager{ankas: make([]Anka, 0), db: newDB}
 	manager.ManagerSetupFromDB()
-	return &Handler{bot: bot, messageCount: make(map[string]int), ankas: make(map[string](map[int]string)), ankaManager: manager}
+	manager.AnkaReader("テストメッセージをここ↓123↓24に入力")
+	return &Handler{bot: bot, ankaManager: manager}
 }
 
 func (h *Handler) BotHandler() {
