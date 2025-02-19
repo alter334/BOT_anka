@@ -25,6 +25,19 @@ func (h *Handler) BotSimplePost(channelID string, content string) (messageid str
 	return q.Id
 }
 
+func (h *Handler) BotSimpleUpdate(messageid string, content string) {
+	r, err := h.bot.API().
+		MessageApi.
+		EditMessage(context.Background(), messageid).PostMessageRequest(traq.PostMessageRequest{
+		Content: content,
+	}).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+
+}
+
 func (h *Handler) BotJoiner(channelID string) {
 	_, err := h.bot.API().BotApi.LetBotJoinChannel(context.Background(), os.Getenv("TRAQ_BOT_ID")).
 		PostBotActionJoinRequest(*traq.NewPostBotActionJoinRequest(channelID)).Execute()

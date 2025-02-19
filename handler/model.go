@@ -17,8 +17,17 @@ type AnkaManager struct {
 }
 
 type Anka struct {
-	id           string
-	messageID    string
-	channelID    string
-	messageCount int
+	id                 string
+	messageID          string
+	channelID          string
+	messageCount       int
+	originmessageCount int
+	inMessageAnkaOrder int
+	viewMessage        *AnkaViewMessage
+}
+
+type AnkaViewMessage struct {
+	id         string
+	originText []string
+	openedText []string
 }
