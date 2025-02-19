@@ -13,15 +13,8 @@ import (
 // 安価登録
 func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 	log.Println("Received MESSAGE_CREATED event: " + p.Message.Text)
+	h.ankaManager.AnkaReader(p.Message.Text)
 	channel, _, _ := h.bot.API().ChannelApi.GetChannel(context.Background(), p.Message.ChannelID).Execute()
-
-	if _, exist := h.messageCount[p.Message.ChannelID]; !exist {
-		h.messageCount[p.Message.ChannelID] = 0
-		log.Println(h.messageCount[p.Message.ChannelID], ":"+channel.Name)
-	} else {
-		h.messageCount[p.Message.ChannelID]++
-		log.Println(h.messageCount[p.Message.ChannelID], ":"+channel.Name)
-	}
 
 	posttext, isAnkaInvoke := h.ankaManager.ankaChecker(p.Message.ChannelID, p.Message.ID)
 	if isAnkaInvoke {
