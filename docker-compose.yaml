@@ -1,0 +1,36 @@
+services:
+  db:
+    image: mariadb:10.5
+    ports:
+      # ポート設定
+      - '3306:3306'
+    environment:
+      # デフォルトのDB
+      MARIADB_DATABASE: defaultdb
+      # デフォルトの一般ユーザー
+      MARIADB_USER: dbuser
+      # デフォルトの一般ユーザーのパスワード
+      MARIADB_PASSWORD: dbpass
+      # 管理者(ユーザー名はroot)のパスワード
+      MARIADB_ROOT_PASSWORD: rootpass
+      # タイムゾーン
+      TZ: Asia/Tokyo
+    volumes:
+      # 初回実行するSQL(フォルダごと)
+      - ./initsql:/docker-entrypoint-initdb.d
+      # 設定ファイル
+      - ./conf.d:/etc/mysql/conf.d
+      # DBの永続化
+      - db-volume:/var/lib/mysql
+
+  adminer:
+    image: adminer:latest
+    ports:
+    - '8081:8080'
+
+# ボリューム設定（永続化のため）
+volumes:
+  db-volume:
+    name: mariadb-data
+    driver: local
+

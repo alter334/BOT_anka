@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/traPtitech/traq-ws-bot/payload"
 )
 
@@ -22,10 +23,17 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 		log.Println(h.messageCount[p.Message.ChannelID], ":"+channel.Name)
 	}
 
-	h.ankaChecker(p.Message.ChannelID, h.messageCount[p.Message.ChannelID], p.Message.ID)
+	posttext, isAnkaInvoke := h.ankaManager.ankaChecker(p.Message.ChannelID, p.Message.ID)
+	if isAnkaInvoke {
+		h.BotSimplePost(p.Message.ChannelID, posttext)
+		h.BotSimplePost("baaf247d-125a-47e4-82a8-ffcccab5f0b8", posttext)
+	}
 	sep := strings.Fields(p.Message.Text)
 
 	if len(sep) == 2 {
+		if sep[0] != "@BOT_anka" {
+			return
+		}
 		if sep[1] == "join" {
 			log.Println("Received join command")
 			h.BotJoiner(p.Message.ChannelID)
@@ -36,36 +44,57 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 		}
 	}
 
-	anka := []rune(sep[len(sep)-1])
+	ankames := []rune(sep[len(sep)-1])
 
-	if anka[0] != '↓' {
-		log.Println(anka[0])
+	if ankames[0] != '↓' {
+		log.Println(ankames[0])
 		return
 	}
-	amount := string([]rune(anka)[1:])
+	amount := string([]rune(ankames)[1:])
 	num, err := strconv.Atoi(amount)
 	if err != nil {
 		log.Println("Failed to parse")
 		return
 	}
-	if _, exist := h.ankas[p.Message.ChannelID]; !exist {
-		h.ankas[p.Message.ChannelID] = make(map[int]string)
-	}
-	h.ankas[p.Message.ChannelID][h.messageCount[p.Message.ChannelID]+num] = p.Message.ID
 
-	log.Println("Add Ancor:" + strconv.Itoa(h.messageCount[p.Message.ChannelID]+num) + ",in:" + channel.Name)
+	if num < 1 {
+		log.Println("Invalid number")
+		return
+	}
+
+	ankaID := uuid.New().String()
+	newanka := &Anka{
+		id:           ankaID,
+		messageID:    p.Message.ID,
+		channelID:    p.Message.ChannelID,
+		messageCount: num,
+	}
+	h.ankaManager.AddAnka(*newanka)
+
+	log.Println("Add Ancor:" + "after" + strconv.Itoa(num) + ",in:" + channel.Name)
 
 }
 
-func (h *Handler) ankaChecker(channelid string, messageNum int, messageId string) {
-	originID, exist := h.ankas[channelid][messageNum]
-	if !exist {
-		return
+// 発火すべき安価があるか確認する
+func (am *AnkaManager) ankaChecker(channelid string, messageId string) (string, bool) {
+	ankas := am.DecrementAnkaMessageCount(channelid)
+	var ankaids []string
+	if !(len(ankas) > 0) {
+		return "", false
 	}
-	originUrl := "https://q.trap.jp/messages/" + originID
+	posttext := ""
+	for _, anka := range ankas {
+		originUrl := "https://q.trap.jp/messages/" + anka.messageID
+		posttext += originUrl + "\n"
+		log.Println("Anka/in:", channelid)
+		ankaids = append(ankaids, anka.id)
+	}
 	ancorUrl := "https://q.trap.jp/messages/" + messageId
-	h.BotSimplePost(channelid, originUrl+"\n"+ancorUrl)
-	h.BotSimplePost("baaf247d-125a-47e4-82a8-ffcccab5f0b8", originUrl+"\n"+ancorUrl)
-	log.Println("Anka/in:", channelid, " at:", messageNum)
-	delete(h.ankas[channelid], messageNum)
+	for _, ankaid := range ankaids {
+		am.RemoveAnkaByID(ankaid)
+		log.Println("Remove Anka:" + ankaid + ",in:" + channelid)
+
+	}
+
+	return posttext + ancorUrl, true
 }
