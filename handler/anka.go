@@ -20,7 +20,7 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 	sep := strings.Fields(p.Message.Text)
 
 	if len(sep) == 2 {
-		if sep[0] == "@BOT_anka" {
+		if sep[0] == "!{\"type\":\"user\",\"raw\":\"@BOT_anka\",\"id\":\"019258ac-db2d-7dac-88d9-7871a664b5b5\"}" {
 
 			if sep[1] == "join" {
 				log.Println("Received join command")
