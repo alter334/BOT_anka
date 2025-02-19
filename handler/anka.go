@@ -1,22 +1,18 @@
 package handler
 
 import (
-	"context"
 	"log"
 	"strconv"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/traPtitech/traq-ws-bot/payload"
 )
 
 // 安価登録
 func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 	log.Println("Received MESSAGE_CREATED event: " + p.Message.Text)
-	h.ankaManager.AnkaReader(p.Message.Text)
-	channel, _, _ := h.bot.API().ChannelApi.GetChannel(context.Background(), p.Message.ChannelID).Execute()
 
-	posttext, isAnkaInvoke := h.ankaManager.ankaChecker(p.Message.ChannelID, p.Message.ID)
+	posttext, isAnkaInvoke := h.ankaManager.ankaChecker(p.Message.ChannelID, p.Message.ID, p.Message.Text, h)
 	if isAnkaInvoke {
 		h.BotSimplePost(p.Message.ChannelID, posttext)
 		h.BotSimplePost("baaf247d-125a-47e4-82a8-ffcccab5f0b8", posttext)
@@ -24,65 +20,58 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 	sep := strings.Fields(p.Message.Text)
 
 	if len(sep) == 2 {
-		if sep[0] != "@BOT_anka" {
-			return
+		if sep[0] == "@BOT_anka" {
+
+			if sep[1] == "join" {
+				log.Println("Received join command")
+				h.BotJoiner(p.Message.ChannelID)
+				return
+			}
+			if sep[1] == "leave" {
+				log.Println("Received leave command")
+				h.BotLeaver(p.Message.ChannelID)
+				return
+			}
 		}
-		if sep[1] == "join" {
-			log.Println("Received join command")
-			h.BotJoiner(p.Message.ChannelID)
-		}
-		if sep[1] == "leave" {
-			log.Println("Received leave command")
-			h.BotLeaver(p.Message.ChannelID)
-		}
 	}
 
-	ankames := []rune(sep[len(sep)-1])
+	viewMessage := h.ankaManager.AnkaReader(p)
 
-	if ankames[0] != '↓' {
-		log.Println(ankames[0])
-		return
+	posttext, isMessageCreate := viewMessage.ViewMessageMaker()
+	if isMessageCreate {
+		viewMessage.id = h.BotSimplePost(p.Message.ChannelID, posttext)
 	}
-	amount := string([]rune(ankames)[1:])
-	num, err := strconv.Atoi(amount)
-	if err != nil {
-		log.Println("Failed to parse")
-		return
-	}
-
-	if num < 1 {
-		log.Println("Invalid number")
-		return
-	}
-
-	ankaID := uuid.New().String()
-	newanka := &Anka{
-		id:           ankaID,
-		messageID:    p.Message.ID,
-		channelID:    p.Message.ChannelID,
-		messageCount: num,
-	}
-	h.ankaManager.AddAnka(*newanka)
-
-	log.Println("Add Ancor:" + "after" + strconv.Itoa(num) + ",in:" + channel.Name)
 
 }
 
 // 発火すべき安価があるか確認する
-func (am *AnkaManager) ankaChecker(channelid string, messageId string) (string, bool) {
+func (am *AnkaManager) ankaChecker(channelid string, messageId string, messageText string, h *Handler) (string, bool) {
 	ankas := am.DecrementAnkaMessageCount(channelid)
 	var ankaids []string
 	if !(len(ankas) > 0) {
 		return "", false
 	}
 	posttext := ""
+	ancorUrl := "https://q.trap.jp/messages/" + messageId
 	for _, anka := range ankas {
 		originUrl := "https://q.trap.jp/messages/" + anka.messageID
 		posttext += originUrl + "\n"
 		log.Println("Anka/in:", channelid)
 		ankaids = append(ankaids, anka.id)
+		replaceText := "[(↓" + strconv.Itoa(anka.originmessageCount) + ")" + messageText + "](" + ancorUrl + ")"
+		if anka.viewMessage == nil {
+			log.Println("viewMessageisNil (Maybe because of reset of Application)")
+			continue
+		}
+		anka.viewMessage.openedText[anka.inMessageAnkaOrder] = replaceText
+		updateAnkaViewText, isUpdate := anka.viewMessage.ViewMessageMaker()
+		if !isUpdate {
+			continue
+		}
+		h.BotSimpleUpdate(anka.viewMessage.id, updateAnkaViewText)
+
 	}
-	ancorUrl := "https://q.trap.jp/messages/" + messageId
+
 	for _, ankaid := range ankaids {
 		am.RemoveAnkaByID(ankaid)
 		log.Println("Remove Anka:" + ankaid + ",in:" + channelid)
