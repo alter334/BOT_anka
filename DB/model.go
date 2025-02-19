@@ -21,3 +21,21 @@ func (d *DB) AnkaInserttoDB(ankaData *AnkaDBData) (err error) {
 	return nil
 
 }
+
+func (d *DB) AnkaNumDecrementByChannel(channelId string) (err error) {
+	_, err = d.dataBase.Exec("UPDATE `anka` SET `ankaInvokeMessageCount` = `ankaInvokeMessageCount` - 1 WHERE `channelId` = ?", channelId)
+	if err != nil {
+		log.Println("ankaDecrementError:", err.Error())
+		return err
+	}
+	return nil
+}
+
+func (d *DB) AnkaDeleteFromDB() (err error) {
+	_, err = d.dataBase.Exec("DELETE FROM `anka` WHERE `ankaInvokeMessageCount` <= 0")
+	if err != nil {
+		log.Println("ankaDeleteError:", err.Error())
+		return err
+	}
+	return nil
+}

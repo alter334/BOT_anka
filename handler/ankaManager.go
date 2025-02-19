@@ -49,6 +49,16 @@ func (am *AnkaManager) FindAnkaByChannelID(channelID string) ([]*Anka, bool) {
 func (am *AnkaManager) DecrementAnkaMessageCount(channelID string) []*Anka {
 	var result []*Anka
 	log.Printf("AnkaManager")
+	err := am.db.AnkaNumDecrementByChannel(channelID)
+	if err != nil {
+		log.Printf("AnkaDeleteError", err.Error())
+		return result
+	}
+	err = am.db.AnkaDeleteFromDB()
+	if err != nil {
+		log.Printf("AnkaDeleteError", err.Error())
+		return result
+	}
 	for i := range am.ankas {
 		if am.ankas[i].channelID == channelID {
 			am.ankas[i].messageCount--
