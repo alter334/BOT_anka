@@ -23,7 +23,10 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 		log.Println(h.messageCount[p.Message.ChannelID], ":"+channel.Name)
 	}
 
-	h.ankaChecker(p.Message.ChannelID, p.Message.ID)
+	posttext, isAnkaInvoke := h.ankaManager.ankaChecker(p.Message.ChannelID, p.Message.ID)
+	if isAnkaInvoke {
+		h.BotSimplePost(p.Message.ChannelID, posttext)
+	}
 	sep := strings.Fields(p.Message.Text)
 
 	if len(sep) == 2 {
@@ -74,11 +77,12 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 
 }
 
-func (h *Handler) ankaChecker(channelid string, messageId string) {
-	ankas := h.ankaManager.DecrementAnkaMessageCount(channelid)
+// 発火すべき安価があるか確認する
+func (am *AnkaManager) ankaChecker(channelid string, messageId string) (string, bool) {
+	ankas := am.DecrementAnkaMessageCount(channelid)
 	var ankaids []string
 	if !(len(ankas) > 0) {
-		return
+		return "", false
 	}
 	posttext := ""
 	for _, anka := range ankas {
@@ -88,11 +92,12 @@ func (h *Handler) ankaChecker(channelid string, messageId string) {
 		ankaids = append(ankaids, anka.id)
 	}
 	ancorUrl := "https://q.trap.jp/messages/" + messageId
-	h.BotSimplePost(channelid, posttext+ancorUrl)
 	// h.BotSimplePost("baaf247d-125a-47e4-82a8-ffcccab5f0b8", originUrl+"\n"+ancorUrl)
-	for _, ankaid := range ankaids{
-		h.ankaManager.RemoveAnkaByID(ankaid)
-    log.Println("Remove Anka:" + ankaid + ",in:" + channelid)
-		
+	for _, ankaid := range ankaids {
+		am.RemoveAnkaByID(ankaid)
+		log.Println("Remove Anka:" + ankaid + ",in:" + channelid)
+
 	}
+
+	return posttext + ancorUrl, true
 }
