@@ -1,10 +1,15 @@
 package handler
 
-import "github.com/labstack/gommon/log"
+import (
+	db "bot_anka/DB"
+
+	"github.com/labstack/gommon/log"
+)
 
 // Ankaを追加するメソッド
 func (am *AnkaManager) AddAnka(a Anka) {
 	am.ankas = append(am.ankas, a)
+	am.addAnkatoDB(&a)
 }
 
 // AnkaをIDで検索するメソッド
@@ -54,4 +59,15 @@ func (am *AnkaManager) DecrementAnkaMessageCount(channelID string) []*Anka {
 		}
 	}
 	return result
+}
+
+// ankaをDBに追加するメソッド
+
+func (am *AnkaManager) addAnkatoDB(anka *Anka) {
+	data := am.ankaDataConverttoDBdata(anka)
+	am.db.AnkaInserttoDB(data)
+}
+
+func (am *AnkaManager) ankaDataConverttoDBdata(anka *Anka) *db.AnkaDBData {
+	return &db.AnkaDBData{Id: anka.id, OriginMessageId: anka.messageID, ChannelId: anka.channelID, AnkaInvokeMessageCount: anka.messageCount}
 }

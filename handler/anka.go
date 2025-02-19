@@ -43,13 +43,13 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 		}
 	}
 
-	anka := []rune(sep[len(sep)-1])
+	ankames := []rune(sep[len(sep)-1])
 
-	if anka[0] != '↓' {
-		log.Println(anka[0])
+	if ankames[0] != '↓' {
+		log.Println(ankames[0])
 		return
 	}
-	amount := string([]rune(anka)[1:])
+	amount := string([]rune(ankames)[1:])
 	num, err := strconv.Atoi(amount)
 	if err != nil {
 		log.Println("Failed to parse")
@@ -67,9 +67,6 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 		messageID:    p.Message.ID,
 		channelID:    p.Message.ChannelID,
 		messageCount: num,
-		delete: func(am *AnkaManager) {
-			am.RemoveAnkaByID(ankaID)
-		},
 	}
 	h.ankaManager.AddAnka(*newanka)
 

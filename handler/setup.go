@@ -1,6 +1,7 @@
 package handler
 
 import (
+	db "bot_anka/DB"
 	"log"
 	"time"
 
@@ -9,7 +10,9 @@ import (
 )
 
 func NewHandler(bot *traqwsbot.Bot) *Handler {
-	return &Handler{bot: bot, messageCount: make(map[string]int), ankas: make(map[string](map[int]string)), ankaManager: AnkaManager{ankas: make([]Anka, 0)}}
+	newDB := &db.DB{}
+	newDB.Setup()
+	return &Handler{bot: bot, messageCount: make(map[string]int), ankas: make(map[string](map[int]string)), ankaManager: AnkaManager{ankas: make([]Anka, 0), db: newDB}}
 }
 
 func (h *Handler) BotHandler() {
