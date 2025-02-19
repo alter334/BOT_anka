@@ -6,7 +6,7 @@ type AnkaDBData struct {
 	Id                     string `db:"Id"`
 	OriginMessageId        string `db:"originMessageId"`
 	ChannelId              string `db:"channelId"`
-	AnkaInvokeMessageCount int    `db:"ankaInvokemessageCount"`
+	AnkaInvokeMessageCount int    `db:"ankaInvokeMessageCount"`
 }
 
 func (d *DB) AnkaInserttoDB(ankaData *AnkaDBData) (err error) {
@@ -38,4 +38,13 @@ func (d *DB) AnkaDeleteFromDB() (err error) {
 		return err
 	}
 	return nil
+}
+
+func (d *DB) AnkaDataSetupFromDB() (ankasDBData []AnkaDBData, err error) {
+	result := []AnkaDBData{}
+	err = d.dataBase.Select(&result, "SELECT * FROM `anka` ORDER BY `ankaInvokeMessageCount` DESC")
+	if err != nil {
+		log.Println("ankaSetupFromDBError:", err.Error())
+	}
+	return result, err
 }

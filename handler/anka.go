@@ -26,6 +26,7 @@ func (h *Handler) ankaProcessor(p *payload.MessageCreated) {
 	posttext, isAnkaInvoke := h.ankaManager.ankaChecker(p.Message.ChannelID, p.Message.ID)
 	if isAnkaInvoke {
 		h.BotSimplePost(p.Message.ChannelID, posttext)
+		h.BotSimplePost("baaf247d-125a-47e4-82a8-ffcccab5f0b8", posttext)
 	}
 	sep := strings.Fields(p.Message.Text)
 
@@ -89,7 +90,6 @@ func (am *AnkaManager) ankaChecker(channelid string, messageId string) (string, 
 		ankaids = append(ankaids, anka.id)
 	}
 	ancorUrl := "https://q.trap.jp/messages/" + messageId
-	// h.BotSimplePost("baaf247d-125a-47e4-82a8-ffcccab5f0b8", originUrl+"\n"+ancorUrl)
 	for _, ankaid := range ankaids {
 		am.RemoveAnkaByID(ankaid)
 		log.Println("Remove Anka:" + ankaid + ",in:" + channelid)

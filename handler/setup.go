@@ -12,7 +12,9 @@ import (
 func NewHandler(bot *traqwsbot.Bot) *Handler {
 	newDB := &db.DB{}
 	newDB.Setup()
-	return &Handler{bot: bot, messageCount: make(map[string]int), ankas: make(map[string](map[int]string)), ankaManager: AnkaManager{ankas: make([]Anka, 0), db: newDB}}
+	manager := &AnkaManager{ankas: make([]Anka, 0), db: newDB}
+	manager.ManagerSetupFromDB()
+	return &Handler{bot: bot, messageCount: make(map[string]int), ankas: make(map[string](map[int]string)), ankaManager: manager}
 }
 
 func (h *Handler) BotHandler() {

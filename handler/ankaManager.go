@@ -81,3 +81,16 @@ func (am *AnkaManager) addAnkatoDB(anka *Anka) {
 func (am *AnkaManager) ankaDataConverttoDBdata(anka *Anka) *db.AnkaDBData {
 	return &db.AnkaDBData{Id: anka.id, OriginMessageId: anka.messageID, ChannelId: anka.channelID, AnkaInvokeMessageCount: anka.messageCount}
 }
+
+func (am *AnkaManager) ManagerSetupFromDB() {
+	ankasDBData, err := am.db.AnkaDataSetupFromDB()
+	if err != nil {
+		log.Printf("ankaSetupFromDBError:", err.Error())
+		return
+	}
+
+	for _, d := range ankasDBData {
+		newAnka := &Anka{id: d.Id, messageID: d.OriginMessageId, channelID: d.ChannelId, messageCount: d.AnkaInvokeMessageCount}
+		am.ankas = append(am.ankas, *newAnka)
+	}
+}
