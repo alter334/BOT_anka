@@ -24,6 +24,9 @@ func (am *AnkaManager) AnkaReader(p *payload.MessageCreated) *AnkaViewMessage {
 		if messageRune[i] == '↓' {
 			log.Printf("::Anka Start::")
 			num, length := am.ankaNumReader(messageRune[i+1:])
+			if num == 0 {
+				continue
+			}
 			newAnka := &Anka{
 				id:                 uuid.New().String(),
 				messageID:          p.Message.ID,
