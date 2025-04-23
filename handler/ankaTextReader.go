@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	"unicode"
 
@@ -63,11 +64,28 @@ func (am *AnkaManager) AnkaReader(p *payload.MessageCreated) *AnkaViewMessage {
 
 func (am *AnkaManager) ankaNumReader(ankaOrigin []rune) (num int, length int) {
 	result := "0"
+	randFlag := false
+	lessNum := 0
+	err := error(nil)
 	length = 0
 	log.Printf("::Anka Read Start::")
-	for i := 0; i < min(12, len(ankaOrigin)); i++ {
+	for i := range min(12, len(ankaOrigin)) {
 		if !unicode.IsDigit(ankaOrigin[i]) {
-			break
+			if !randFlag && ankaOrigin[i] == '[' {
+				randFlag = true
+				length++
+				continue
+			} else if randFlag && ankaOrigin[i] == '-' {
+				lessNum, err = strconv.Atoi(result)
+				result = "0"
+				if err != nil {
+					log.Printf("AnkaNumReadError")
+				}
+				length++
+				continue
+			} else {
+				break
+			}
 		}
 		length++
 		fmt.Printf("%c", ankaOrigin[i])
@@ -75,11 +93,23 @@ func (am *AnkaManager) ankaNumReader(ankaOrigin []rune) (num int, length int) {
 	}
 	fmt.Printf("\n")
 	log.Printf("::Anka Read End::")
-	num, err := strconv.Atoi(result)
+	num, err = strconv.Atoi(result)
 
 	if err != nil {
 		log.Printf("AnkaNumReadError")
 	}
+
+	if randFlag {
+		// lessNum以上num以下の乱数を生成しnumに代入
+		log.Printf("AnkaRandProcess")
+		// lessNumとnumのログ出力
+		log.Printf("lessNum:%d,num:%d", lessNum, num)
+		if lessNum > num {
+			num = lessNum
+		}
+		num = lessNum + int(rand.Intn(num-lessNum+1))
+	}
+
 	return num, length
 }
 
